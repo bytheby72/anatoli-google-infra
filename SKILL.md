@@ -1,6 +1,6 @@
 ---
 name: anatoli-google-infra
-description: Full Google Workspace setup for Anatoli Piakhouski. Service account for Drive/Sheets/Docs/Calendar + OAuth for Gmail. Auto-refresh enabled. Recovery instructions.
+description: Full Google Workspace setup. Service account for Drive/Sheets/Docs/Calendar + OAuth for Gmail. Auto-refresh enabled. Recovery instructions.
 version: 1.0.0
 author: Hermes Agent
 metadata:
@@ -8,7 +8,7 @@ metadata:
     tags: [google, workspace, gmail, drive, oauth, service-account]
 ---
 
-# Google Workspace Infrastructure — Anatoli Piakhouski
+# Google Workspace Infrastructure
 
 ## Current State (2026-04-18)
 
@@ -112,8 +112,8 @@ $GAPI calendar create --summary "Meeting" --start "2026-04-20T10:00:00Z" --end "
 
 ## Google Cloud Project
 
-- Project: `anatolipiakhouski`
-- Service account: `hermes-drive@anatolipiakhouski.iam.gserviceaccount.com`
+- Project: `your-project-id`
+- Service account: `hermes-drive@your-project.iam.gserviceaccount.com`
 - Enabled APIs: Gmail API, Drive API, Sheets API, Docs API, Calendar API, People API
 
 ## Shell Aliases (Optional Convenience)
