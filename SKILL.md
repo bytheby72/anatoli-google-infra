@@ -174,6 +174,28 @@ for msg in emails:
                    msg["id"], "--add-labels", "TRASH", "--remove-labels", "INBOX"])
 ```
 
+## Lessons Learned from Trial and Error
+
+### Lesson 1: Gmail API must be explicitly enabled
+
+Even with a valid OAuth token, Gmail calls fail with `Precondition check failed` if the Gmail API is not enabled in the Google Cloud project. Always verify: https://console.cloud.google.com/apis/library/gmail.googleapis.com
+
+### Lesson 2: `google_api.py` defaults to service account for ALL APIs
+
+The original `google_api.py` checked `SERVICE_ACCOUNT_PATH.exists()` first and used it for everything. This caused `HttpError 400` for Gmail because service accounts cannot access personal Gmail. The fix is a `force_oauth` parameter that Gmail functions must pass.
+
+### Lesson 3: App Password is blocked from cloud servers
+
+Multiple App Passwords were generated and all returned `AUTHENTICATIONFAILED` from the server IP. Google's security systems block App Password logins from cloud/server IPs. The unlock CAPTCHA (`displayunlockcaptcha`) does not help for non-residential IPs. **Do not rely on App Password for headless/server deployments.**
+
+### Lesson 4: OAuth refresh token is the reliable path for Gmail
+
+Once obtained, the refresh token in `google_token.json` auto-refreshes the access token indefinitely. The only way it breaks is if the user manually revokes access in their Google Account. This is the most stable known method for server-based Gmail access on personal accounts.
+
+### Lesson 5: Service account files must be explicitly shared
+
+Service accounts cannot see the user's personal Drive files by default. You must share folders/files with the service account email (`hermes-drive@...`) inside Google Drive. This is easy to forget and causes "empty Drive" confusion.
+
 ## Important Rules
 
 1. **Never delete `google_service_account.json`** — it's the permanent key for Drive/Sheets/Docs/Calendar.
