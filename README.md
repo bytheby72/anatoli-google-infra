@@ -1,90 +1,92 @@
 # 🔥 Google Workspace Infrastructure for Hermes Agent
 
-**Настроил один раз — забыл навсегда.**
+**[🇷🇺 Русский](README.ru.md) · [🇨🇳 中文](README.zh.md)**
+
+> Configure once — forget forever.
 
 ---
 
-## 😤 Боль: почему Google постоянно отваливается
+## 😤 The Pain: Why Google Keeps Breaking
 
-Если ты настраивал доступ к Google Drive или Gmail для бота/скрипта — ты знаешь эту боль:
+If you've ever set up Google Drive or Gmail access for a bot or script, you know this pain:
 
-- **OAuth токен протухает** через час, refresh token отзывается Google "по подозрению"
-- **"Precondition check failed"** — API вроде включён, токен вроде свежий, но Gmail не работает
-- **Service account** работает для Drive, но **не может зайти в личную почту Gmail**
-- Каждые 2 недели приходится заново лезть в браузер, кликать "разрешить", копировать URL, вставлять в терминал...
+- **OAuth token expires** in an hour, refresh token gets revoked by Google "due to suspicious activity"
+- **"Precondition check failed"** — API is enabled, token is fresh, but Gmail still doesn't work
+- **Service account** works for Drive, but **cannot access personal Gmail**
+- Every two weeks you're back in the browser, clicking "allow", copying URLs, pasting into terminal...
 
-Это не автоматизация. Это новая работа.
+That's not automation. That's a new job.
 
 ---
 
-## ✨ Решение: двухуровневая архитектура
+## ✨ The Solution: Two-Layer Architecture
 
-Этот skill решает проблему раз и навсегда. Никакого ручного re-auth. Никаких танцев с бубном.
+This skill solves the problem once and for all. No manual re-auth. No dancing with tambourines.
 
-| Сервис | Метод | Почему это вечно |
-|--------|-------|------------------|
-| **Drive** | Service Account | JSON-ключ. Не протухает. Никогда. |
-| **Sheets** | Service Account | Тот же ключ. |
-| **Docs** | Service Account | Тот же ключ. |
-| **Calendar** | Service Account | Тот же ключ. |
-| **Gmail** | OAuth + Auto-Refresh | Refresh token живёт годами. Обновляется сам. |
+| Service | Method | Why It Lasts Forever |
+|---------|--------|---------------------|
+| **Drive** | Service Account | JSON key. Never expires. Never. |
+| **Sheets** | Service Account | Same key. |
+| **Docs** | Service Account | Same key. |
+| **Calendar** | Service Account | Same key. |
+| **Gmail** | OAuth + Auto-Refresh | Refresh token lives for years. Auto-updates. |
 
-### Ключевой инсайт
+### The Key Insight
 
-Google не даёт одним способом доступ ко всему. Service account — железобетонный, но слеп к Gmail. OAuth — гибкий, но капризный.
+Google doesn't give one method for everything. Service account is bulletproof but blind to Gmail. OAuth is flexible but capricious.
 
-**Мы используем оба:**
-- **Service account** → Drive, Sheets, Docs, Calendar (всё, что не Gmail)
-- **OAuth** → Gmail (с автоматическим refresh)
+**We use both:**
+- **Service account** → Drive, Sheets, Docs, Calendar (everything except Gmail)
+- **OAuth** → Gmail (with automatic refresh)
 
-Hermes сам выбирает нужный метод для каждого API. Ты просто пишешь:
+Hermes picks the right method for each API automatically. You just write:
 
 ```bash
-проверь драйв
-проверь почту
+check drive
+check mail
 ```
 
 ---
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
 ### 1. Service Account (Drive/Sheets/Docs/Calendar)
 
 ```bash
-# Создай в Google Cloud Console:
+# Create in Google Cloud Console:
 # https://console.cloud.google.com/iam-admin/serviceaccounts
-# → Create key → JSON → сохрани как:
+# → Create key → JSON → save as:
 ~/.hermes/google_service_account.json
 
-# Включи API:
+# Enable APIs:
 # Drive API, Sheets API, Docs API, Calendar API
 ```
 
 ### 2. OAuth (Gmail)
 
 ```bash
-# Включи Gmail API в Cloud Console
+# Enable Gmail API in Cloud Console
 # https://console.cloud.google.com/apis/library/gmail.googleapis.com
 
-# Запусти авторизацию:
-python setup.py --client-secret /путь/к/client_secret.json
+# Run authorization:
+python setup.py --client-secret /path/to/client_secret.json
 python setup.py --auth-url
-# Открой ссылку в браузере → авторизуй → вставь URL обратно
-python setup.py --auth-code "URL_ИЗ_БРАУЗЕРА"
+# Open link in browser → authorize → paste URL back
+python setup.py --auth-code "URL_FROM_BROWSER"
 ```
 
-### 3. Проверь
+### 3. Verify
 
 ```bash
 python google_api.py gmail search "is:unread" --max 5
 python google_api.py drive search "report" --max 5
 ```
 
-Работает? Работает. **Больше никогда не придётся трогать.**
+Works? Works. **You'll never have to touch it again.**
 
 ---
 
-## 🏗 Архитектура
+## 🏗 Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -112,45 +114,38 @@ python google_api.py drive search "report" --max 5
 
 ---
 
-## 🛡 Recovery (если всё же сломалось)
+## 🛡 Recovery (If Something Breaks)
 
-| Симптом | Причина | Фикс |
-|---------|---------|------|
-| Drive пустой | Service account не расшарен на папку | Поделись папкой с `hermes-drive@...` |
-| Gmail 400/401 | OAuth отозван | Переавторизуй через `setup.py --auth-url` |
-| "Precondition check failed" | Service account лезет в Gmail | Уже пофикшено — используется `force_oauth=True` для Gmail |
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Drive empty | Service account not shared on folder | Share folder with `hermes-drive@...` |
+| Gmail 400/401 | OAuth revoked | Re-authorize via `setup.py --auth-url` |
+| "Precondition check failed" | Service account trying Gmail | Already fixed — uses `force_oauth=True` for Gmail |
 
-Полная инструкция в `SKILL.md`.
-
----
-
-## 💡 Эффект "вау"
-
-> Ты настраиваешь это **один раз за 10 минут**. Потом пишешь `проверь почту` — и через 6 месяцев оно всё ещё работает. Без кронов. Без напоминаний. Без `invalid_grant`.
-
-Это не скрипт. Это инфраструктура, которая просто живёт.
+Full instructions in `SKILL.md`.
 
 ---
 
-## 📦 Установка как Hermes Skill
+## 💡 The "Wow" Effect
+
+> You set this up **once in 10 minutes**. Then you write `check mail` — and six months later it still works. No cron jobs. No reminders. No `invalid_grant`.
+
+This isn't a script. It's infrastructure that just lives.
+
+---
+
+## 📦 Install as Hermes Skill
 
 ```bash
 hermes skills install https://github.com/bytheby72/anatoli-google-infra
 ```
 
-Или добавь в `config.yaml`:
+Or add to `config.yaml`:
 ```yaml
 skills:
   external_dirs:
     - https://github.com/bytheby72/anatoli-google-infra
 ```
-
----
-
-## 🧠 Автор
-
-Настроено для **Anatoli** через Hermes Agent. 
-Если это читаешь не ты — бери, клонируй, адаптируй под себя.
 
 ---
 
