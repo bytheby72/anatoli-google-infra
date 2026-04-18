@@ -73,7 +73,7 @@ If OAuth is revoked and cannot be restored:
 2. Create App Password: https://myaccount.google.com/apppasswords (select Mail)
 3. Update `~/.hermes/.env`:
    ```
-   EMAIL_ADDRESS=apiakhouski@gmail.com
+   EMAIL_ADDRESS=your-email@gmail.com
    EMAIL_PASSWORD=YOUR_APP_PASSWORD
    EMAIL_IMAP_HOST=imap.gmail.com
    EMAIL_IMAP_PORT=993
